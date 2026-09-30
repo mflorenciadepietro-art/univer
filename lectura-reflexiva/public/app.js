@@ -1,4 +1,5 @@
-// Interfaz de Lectura Reflexiva. Todo se guarda en este navegador (localStorage).
+// Interfaz de Lectura Reflexiva. Todo se guarda en este navegador (localStorage e IndexedDB).
+import { leerArchivo, guardarTexto, obtenerTexto, borrarTexto } from "./lector.js";
 
 const CLAVE = "lectura-reflexiva:v1";
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
@@ -25,6 +26,24 @@ function guardar() {
 const id = () => Math.random().toString(36).slice(2, 10);
 const fecha = (ms) => new Date(ms).toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" });
 const libro = () => estado.libros.find((l) => l.id === libroActual);
+const hoy = () => new Date().toLocaleDateString("sv"); // AAAA-MM-DD en hora local
+
+// Campos agregados después de la primera versión; se completan en libros viejos.
+for (const l of estado.libros) {
+  l.reflexiones ??= [];
+  l.pagina ??= 0;
+}
+
+async function pedir(ruta, cuerpo) {
+  const r = await fetch(ruta, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cuerpo),
+  });
+  const datos = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(datos.error || "Algo salió mal. Intentá de nuevo.");
+  return datos;
+}
 
 function el(tag, props = {}, ...hijos) {
   const nodo = Object.assign(document.createElement(tag), props);
@@ -60,13 +79,14 @@ function mostrarBiblioteca() {
           el("strong", { textContent: l.titulo }),
           el("span", { textContent: l.autor || "" }),
           el("small", {
-            textContent: `${l.diario.length} notas · ${l.frases.length} frases · desde ${fecha(l.creado)}`,
+            textContent: `${l.resumen ? "✓ Terminado · " : ""}${l.diario.length} notas · ${l.frases.length} frases · desde ${fecha(l.creado)}`,
           }),
         ),
       ),
     ),
   );
   $("#biblioteca-vacia").hidden = estado.libros.length > 0;
+  pintarFraseDelDia();
 }
 
 function abrirLibro(idLibro) {
@@ -78,7 +98,9 @@ function abrirLibro(idLibro) {
   $("#libro-autor").textContent = l.autor || "";
   $("#libro-intencion").textContent = l.intencion ? `Busco: ${l.intencion}` : "";
   $("#resultado").replaceChildren();
-  cambiarPestana("reflexionar");
+  cambiarPestana("leer");
+  pintarLector();
+  pintarCierre();
   pintarChat();
   pintarDiario();
   pintarFrases();
@@ -87,6 +109,7 @@ function abrirLibro(idLibro) {
 function cambiarPestana(nombre) {
   document.querySelectorAll("[data-pestana]").forEach((b) => b.setAttribute("aria-selected", b.dataset.pestana === nombre));
   document.querySelectorAll(".pestana").forEach((p) => (p.hidden = p.id !== `pestana-${nombre}`));
+  actualizarSeleccion();
 }
 
 /* ---------- Biblioteca ---------- */
@@ -103,6 +126,8 @@ $("#form-libro").addEventListener("submit", (e) => {
     diario: [],
     frases: [],
     chat: [],
+    reflexiones: [],
+    pagina: 0,
   };
   estado.libros.unshift(nuevo);
   guardar();
@@ -124,13 +149,10 @@ $("#form-fragmento").addEventListener("submit", async (e) => {
   resultado.replaceChildren(el("p", { className: "pensando", textContent: "Leyendo con calma tu fragmento…" }));
 
   try {
-    const r = await fetch("/api/reflexionar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ libro: contexto(libro()), fragmento, nota: datos.get("nota").trim() }),
-    });
-    const cuerpo = await r.json();
-    if (!r.ok) throw new Error(cuerpo.error || "No se pudo reflexionar.");
+    const l = libro();
+    const cuerpo = await pedir("/api/reflexionar", { libro: contexto(l), fragmento, nota: datos.get("nota").trim() });
+    l.reflexiones.push({ fragmento: fragmento.slice(0, 400), idea: cuerpo.idea_central, creado: Date.now() });
+    guardar();
     resultado.replaceChildren(pintarReflexion(cuerpo, fragmento));
   } catch (err) {
     resultado.replaceChildren(el("p", { className: "error", textContent: err.message }));
@@ -168,13 +190,19 @@ function botonGuardarFrase(frase) {
     boton.disabled = ya();
   };
   boton.onclick = () => {
-    libro().frases.unshift({ id: id(), texto: frase, creado: Date.now() });
-    guardar();
+    guardarFrase(frase);
     actualizar();
-    pintarFrases();
   };
   actualizar();
   return boton;
+}
+
+function guardarFrase(frase) {
+  const l = libro();
+  if (l.frases.some((f) => f.texto === frase)) return;
+  l.frases.unshift({ id: id(), texto: frase, creado: Date.now() });
+  guardar();
+  pintarFrases();
 }
 
 function formRespuesta(pregunta, fragmento) {
@@ -333,6 +361,214 @@ function pintarFrases() {
       : [el("li", { className: "vacio", textContent: "Guardá las frases que quieras recordar desde “Reflexionar”." })]),
   );
 }
+
+/* ---------- Leer el libro ---------- */
+
+let paginas = null;
+
+async function pintarLector() {
+  const idLibro = libroActual;
+  const datos = await obtenerTexto(idLibro);
+  if (idLibro !== libroActual) return;
+  paginas = datos?.paginas ?? null;
+  $("#subir").hidden = !!paginas;
+  $("#lector").hidden = !paginas;
+  $("#estado-archivo").hidden = true;
+  if (paginas) mostrarPagina(libro().pagina);
+}
+
+function mostrarPagina(n) {
+  const l = libro();
+  l.pagina = Math.max(0, Math.min(n, paginas.length - 1));
+  guardar();
+  $("#lector-texto").replaceChildren(
+    ...paginas[l.pagina].split(/\n\s*\n/).map((p) => el("p", { textContent: p.trim() })),
+  );
+  $("#pagina-num").textContent = `Página ${l.pagina + 1} de ${paginas.length}`;
+  for (const sufijo of ["", "-2"]) {
+    $(`#pagina-anterior${sufijo}`).disabled = l.pagina === 0;
+    $(`#pagina-siguiente${sufijo}`).disabled = l.pagina === paginas.length - 1;
+  }
+}
+
+function pasarPagina(delta) {
+  mostrarPagina(libro().pagina + delta);
+  $("#lector").scrollIntoView({ block: "start" });
+}
+
+$("#pagina-anterior").onclick = $("#pagina-anterior-2").onclick = () => pasarPagina(-1);
+$("#pagina-siguiente").onclick = $("#pagina-siguiente-2").onclick = () => pasarPagina(1);
+
+document.addEventListener("keydown", (e) => {
+  if ($("#pestana-leer").hidden || $("#vista-libro").hidden || !paginas || e.target.closest("input, textarea")) return;
+  if (e.key === "ArrowRight") pasarPagina(1);
+  if (e.key === "ArrowLeft") pasarPagina(-1);
+});
+
+$("#input-archivo").addEventListener("change", async (e) => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  const idLibro = libroActual;
+  const aviso = $("#estado-archivo");
+  aviso.hidden = false;
+  aviso.className = "vacio";
+  aviso.textContent = "Abriendo el libro…";
+  try {
+    const nuevas = await leerArchivo(archivo);
+    await guardarTexto(idLibro, { nombre: archivo.name, paginas: nuevas });
+    const l = estado.libros.find((x) => x.id === idLibro);
+    l.pagina = 0;
+    guardar();
+    if (idLibro === libroActual) pintarLector();
+  } catch (err) {
+    aviso.className = "error";
+    aviso.textContent = err.message || "No se pudo abrir el archivo.";
+  } finally {
+    e.target.value = "";
+  }
+});
+
+$("#cambiar-archivo").addEventListener("click", async () => {
+  if (!confirm("¿Quitar el archivo de este libro? Tus notas y frases se conservan.")) return;
+  await borrarTexto(libroActual);
+  pintarLector();
+});
+
+// Al seleccionar texto del libro aparece una barra para reflexionar o guardar la frase.
+function textoSeleccionado() {
+  const sel = document.getSelection();
+  if (!sel || sel.isCollapsed || !$("#lector-texto").contains(sel.anchorNode)) return "";
+  return sel.toString().replace(/\s+/g, " ").trim();
+}
+
+function actualizarSeleccion() {
+  $("#barra-seleccion").hidden = !textoSeleccionado() || $("#pestana-leer").hidden;
+}
+
+document.addEventListener("selectionchange", actualizarSeleccion);
+
+$("#sel-reflexionar").addEventListener("click", () => {
+  const texto = textoSeleccionado();
+  if (!texto) return;
+  const form = $("#form-fragmento");
+  form.elements.fragmento.value = texto;
+  form.elements.nota.value = "";
+  $("#resultado").replaceChildren();
+  document.getSelection().removeAllRanges();
+  cambiarPestana("reflexionar");
+  form.elements.nota.focus();
+});
+
+$("#sel-guardar").addEventListener("click", () => {
+  const texto = textoSeleccionado();
+  if (!texto) return;
+  guardarFrase(texto);
+  document.getSelection().removeAllRanges();
+  actualizarSeleccion();
+  avisar("Frase guardada ✓");
+});
+
+function avisar(texto) {
+  const nodo = el("div", { className: "aviso", textContent: texto, role: "status" });
+  document.body.append(nodo);
+  setTimeout(() => nodo.remove(), 1800);
+}
+
+/* ---------- Frase del día ---------- */
+
+let pidiendoFrase = false;
+
+async function pintarFraseDelDia(otra = false) {
+  const caja = $("#frase-dia");
+  const guardada = estado.fraseDelDia;
+
+  if (guardada?.fecha === hoy() && !otra) {
+    const f = guardada.datos;
+    caja.replaceChildren(
+      el("small", { textContent: "Frase del día" }),
+      el("blockquote", { textContent: f.frase }),
+      el("p", { className: "origen", textContent: f.origen }),
+      el("p", { textContent: f.reflexion }),
+      el("p", { className: "pregunta", textContent: f.pregunta }),
+      el("button", { type: "button", className: "enlace", textContent: "Otra frase", onclick: () => pintarFraseDelDia(true) }),
+    );
+    return;
+  }
+  if (pidiendoFrase) return;
+
+  pidiendoFrase = true;
+  caja.replaceChildren(el("p", { className: "pensando", textContent: "Buscando una frase para hoy…" }));
+  try {
+    const datos = await pedir("/api/frase-del-dia", {
+      fecha: new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" }),
+      libros: estado.libros.map((l) => ({ ...contexto(l), frases: l.frases.map((f) => f.texto) })),
+      excluir: otra && guardada ? [guardada.datos.frase] : [],
+    });
+    estado.fraseDelDia = { fecha: hoy(), datos };
+    guardar();
+    pidiendoFrase = false;
+    pintarFraseDelDia();
+  } catch (err) {
+    pidiendoFrase = false;
+    caja.replaceChildren(
+      el("p", { className: "vacio", textContent: `No pude traer la frase del día: ${err.message}` }),
+      el("button", { type: "button", className: "enlace", textContent: "Intentar de nuevo", onclick: () => pintarFraseDelDia(otra) }),
+    );
+  }
+}
+
+/* ---------- Cierre del libro ---------- */
+
+function pintarCierre() {
+  const l = libro();
+  $("#generar-cierre").textContent = l.resumen ? "Volver a generar mi cierre" : "Terminé el libro: generar mi cierre";
+  $("#cierre").replaceChildren(l.resumen ? vistaCierre(l.resumen) : "");
+}
+
+function vistaCierre(r) {
+  return el(
+    "article",
+    { className: "reflexion" },
+    el("section", { className: "bloque" }, el("h3", { textContent: "Lo que este libro te dejó" }), el("p", { textContent: r.lo_que_te_dejo })),
+    el(
+      "section",
+      { className: "bloque" },
+      el("h3", { textContent: "Temas que se repitieron en vos" }),
+      el("ul", { className: "temas" }, ...r.temas.map((t) => el("li", {}, el("strong", { textContent: t.tema }), el("p", { textContent: t.como_aparecio })))),
+    ),
+    el("section", { className: "bloque" }, el("h3", { textContent: "Tu recorrido" }), el("p", { textContent: r.tu_recorrido })),
+    el(
+      "section",
+      { className: "bloque" },
+      el("h3", { textContent: "Frases que te acompañan" }),
+      el("ul", { className: "frases-clave" }, ...r.frases_que_te_acompanan.map((f) => el("li", {}, el("q", { textContent: f })))),
+    ),
+    el("blockquote", { className: "para-llevar" }, el("span", { textContent: r.pregunta_para_seguir })),
+    el("section", { className: "bloque" }, el("h3", { textContent: "Para tu próxima lectura" }), el("p", { textContent: r.proxima_lectura })),
+  );
+}
+
+$("#generar-cierre").addEventListener("click", async (e) => {
+  const boton = e.currentTarget;
+  const l = libro();
+  boton.disabled = true;
+  $("#cierre").replaceChildren(el("p", { className: "pensando", textContent: "Releyendo todo lo que fuiste escribiendo…" }));
+  try {
+    const orden = (a, b) => a.creado - b.creado;
+    l.resumen = await pedir("/api/resumen", {
+      libro: contexto(l),
+      reflexiones: [...l.reflexiones].sort(orden).map((r) => `"${r.fragmento}" → ${r.idea}`),
+      diario: [...l.diario].sort(orden).map((d) => (d.pregunta ? `${d.pregunta} → ${d.texto}` : d.texto)),
+      frases: [...l.frases].sort(orden).map((f) => f.texto),
+    });
+    guardar();
+    pintarCierre();
+  } catch (err) {
+    $("#cierre").replaceChildren(el("p", { className: "error", textContent: err.message }));
+  } finally {
+    boton.disabled = false;
+  }
+});
 
 /* ---------- Arranque ---------- */
 

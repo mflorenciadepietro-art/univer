@@ -22,11 +22,13 @@
         <p>Guardá los libros que estás leyendo, compartí los fragmentos que te tocan y reflexioná con una compañía que te devuelve frases clave y preguntas para mirar hacia adentro.</p>
       </div>
 
+      <section id="frase-dia" class="frase-dia" aria-live="polite"></section>
+
       <form id="form-libro" class="tarjeta">
         <h2>Empezar un libro</h2>
         <label>Título <input name="titulo" required placeholder="Ej.: El principito" /></label>
         <label>Autor/a <input name="autor" placeholder="Ej.: Antoine de Saint-Exupéry" /></label>
-        <label>¿Qué buscás en esta lectura? <span class="opcional">(opcional)</span>
+        <label><span>¿Qué buscás en esta lectura? <span class="opcional">(opcional)</span></span>
           <textarea name="intencion" rows="2" placeholder="Ej.: entender mejor mis vínculos, bajar el ritmo…"></textarea>
         </label>
         <button class="primario" type="submit">Agregar a mi biblioteca</button>
@@ -47,18 +49,45 @@
       </div>
 
       <nav class="pestanas" role="tablist">
-        <button role="tab" data-pestana="reflexionar" aria-selected="true">Reflexionar</button>
+        <button role="tab" data-pestana="leer" aria-selected="true">Leer</button>
+        <button role="tab" data-pestana="reflexionar">Reflexionar</button>
         <button role="tab" data-pestana="conversar">Conversar</button>
         <button role="tab" data-pestana="diario">Mi diario</button>
         <button role="tab" data-pestana="frases">Mis frases</button>
+        <button role="tab" data-pestana="cierre">Cierre</button>
       </nav>
 
-      <div id="pestana-reflexionar" class="pestana">
+      <div id="pestana-leer" class="pestana">
+        <div id="subir" class="tarjeta">
+          <h2>Abrí tu libro</h2>
+          <p class="vacio">Subí el libro en PDF, EPUB o TXT para leerlo acá. Seleccioná cualquier pasaje y reflexioná con él o guardalo como frase. El archivo queda solo en este navegador.</p>
+          <label class="archivo">
+            <input id="input-archivo" type="file" accept=".pdf,.epub,.txt,.md,application/pdf,application/epub+zip,text/plain" />
+            <span class="primario">Elegir archivo</span>
+          </label>
+          <p id="estado-archivo" class="vacio" hidden></p>
+        </div>
+        <div id="lector" hidden>
+          <div class="lector-barra">
+            <button id="pagina-anterior" type="button" aria-label="Página anterior">←</button>
+            <span id="pagina-num"></span>
+            <button id="pagina-siguiente" type="button" aria-label="Página siguiente">→</button>
+          </div>
+          <article id="lector-texto" class="lector-texto"></article>
+          <div class="lector-barra">
+            <button id="pagina-anterior-2" type="button" aria-label="Página anterior">←</button>
+            <button id="cambiar-archivo" class="enlace" type="button">Quitar archivo</button>
+            <button id="pagina-siguiente-2" type="button" aria-label="Página siguiente">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pestana-reflexionar" class="pestana" hidden>
         <form id="form-fragmento" class="tarjeta">
           <label>Fragmento que leíste
             <textarea name="fragmento" rows="7" required placeholder="Pegá o escribí el pasaje que te llamó la atención…"></textarea>
           </label>
-          <label>¿Qué te despertó? <span class="opcional">(opcional)</span>
+          <label><span>¿Qué te despertó? <span class="opcional">(opcional)</span></span>
             <textarea name="nota" rows="2" placeholder="Una emoción, un recuerdo, una duda…"></textarea>
           </label>
           <button class="primario" type="submit">Reflexionar con este fragmento</button>
@@ -88,8 +117,22 @@
       <div id="pestana-frases" class="pestana" hidden>
         <ul id="lista-frases" class="frases"></ul>
       </div>
+
+      <div id="pestana-cierre" class="pestana" hidden>
+        <div class="tarjeta">
+          <h2>Cerrar la lectura</h2>
+          <p class="vacio">Cuando termines el libro, reuní todo lo que fuiste reflexionando, escribiendo y guardando en un cierre: lo que te dejó, los temas que se repitieron y cómo fue cambiando tu mirada.</p>
+          <button id="generar-cierre" class="primario" type="button">Terminé el libro: generar mi cierre</button>
+        </div>
+        <div id="cierre"></div>
+      </div>
     </section>
   </main>
+
+  <div id="barra-seleccion" class="barra-seleccion" hidden>
+    <button id="sel-reflexionar" class="primario" type="button">Reflexionar con esto</button>
+    <button id="sel-guardar" type="button">☆ Guardar frase</button>
+  </div>
 
   <template id="tpl-reflexion">
     <article class="reflexion">
