@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lectura Reflexiva</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="barra">
+    <button class="marca" id="ir-inicio" type="button">📖 Lectura Reflexiva</button>
+  </header>
+
+  <main id="app">
+    <!-- Biblioteca -->
+    <section id="vista-biblioteca" class="vista">
+      <div class="intro">
+        <h1>Leer, pensar, volver a vos</h1>
+        <p>Guardá los libros que estás leyendo, compartí los fragmentos que te tocan y reflexioná con una compañía que te devuelve frases clave y preguntas para mirar hacia adentro.</p>
+      </div>
+
+      <form id="form-libro" class="tarjeta">
+        <h2>Empezar un libro</h2>
+        <label>Título <input name="titulo" required placeholder="Ej.: El principito" /></label>
+        <label>Autor/a <input name="autor" placeholder="Ej.: Antoine de Saint-Exupéry" /></label>
+        <label>¿Qué buscás en esta lectura? <span class="opcional">(opcional)</span>
+          <textarea name="intencion" rows="2" placeholder="Ej.: entender mejor mis vínculos, bajar el ritmo…"></textarea>
+        </label>
+        <button class="primario" type="submit">Agregar a mi biblioteca</button>
+      </form>
+
+      <h2 class="subtitulo">Mi biblioteca</h2>
+      <ul id="lista-libros" class="libros"></ul>
+      <p id="biblioteca-vacia" class="vacio">Todavía no agregaste libros.</p>
+    </section>
+
+    <!-- Libro -->
+    <section id="vista-libro" class="vista" hidden>
+      <div class="encabezado-libro">
+        <button class="volver" id="volver" type="button">← Biblioteca</button>
+        <h1 id="libro-titulo"></h1>
+        <p id="libro-autor" class="autor"></p>
+        <p id="libro-intencion" class="intencion"></p>
+      </div>
+
+      <nav class="pestanas" role="tablist">
+        <button role="tab" data-pestana="reflexionar" aria-selected="true">Reflexionar</button>
+        <button role="tab" data-pestana="conversar">Conversar</button>
+        <button role="tab" data-pestana="diario">Mi diario</button>
+        <button role="tab" data-pestana="frases">Mis frases</button>
+      </nav>
+
+      <div id="pestana-reflexionar" class="pestana">
+        <form id="form-fragmento" class="tarjeta">
+          <label>Fragmento que leíste
+            <textarea name="fragmento" rows="7" required placeholder="Pegá o escribí el pasaje que te llamó la atención…"></textarea>
+          </label>
+          <label>¿Qué te despertó? <span class="opcional">(opcional)</span>
+            <textarea name="nota" rows="2" placeholder="Una emoción, un recuerdo, una duda…"></textarea>
+          </label>
+          <button class="primario" type="submit">Reflexionar con este fragmento</button>
+        </form>
+        <div id="resultado"></div>
+      </div>
+
+      <div id="pestana-conversar" class="pestana" hidden>
+        <div id="chat" class="chat" aria-live="polite"></div>
+        <form id="form-chat" class="chat-entrada">
+          <textarea name="mensaje" rows="2" required placeholder="Contame qué estás pensando del libro…"></textarea>
+          <button class="primario" type="submit">Enviar</button>
+        </form>
+        <button id="borrar-chat" class="enlace" type="button">Empezar una conversación nueva</button>
+      </div>
+
+      <div id="pestana-diario" class="pestana" hidden>
+        <form id="form-diario" class="tarjeta">
+          <label>Escribir en mi diario
+            <textarea name="texto" rows="4" required placeholder="Lo que este libro me está mostrando de mí…"></textarea>
+          </label>
+          <button class="primario" type="submit">Guardar</button>
+        </form>
+        <ul id="lista-diario" class="diario"></ul>
+      </div>
+
+      <div id="pestana-frases" class="pestana" hidden>
+        <ul id="lista-frases" class="frases"></ul>
+      </div>
+    </section>
+  </main>
+
+  <template id="tpl-reflexion">
+    <article class="reflexion">
+      <section class="bloque">
+        <h3>Frases clave</h3>
+        <ul class="frases-clave"></ul>
+      </section>
+      <section class="bloque">
+        <h3>La idea central</h3>
+        <p class="idea"></p>
+      </section>
+      <section class="bloque">
+        <h3>Preguntas para vos</h3>
+        <ol class="preguntas"></ol>
+      </section>
+      <section class="bloque">
+        <h3>Conexión con tu vida</h3>
+        <p class="conexion"></p>
+      </section>
+      <blockquote class="para-llevar"></blockquote>
+    </article>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

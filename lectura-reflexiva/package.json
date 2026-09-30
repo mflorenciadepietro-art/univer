@@ -1,0 +1,16 @@
+{
+  "name": "lectura-reflexiva",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Una app para leer libros y reflexionar con Claude: frases clave, preguntas y un diario de lectura.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0"
+  }
+}

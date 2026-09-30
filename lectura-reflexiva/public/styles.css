@@ -1,0 +1,203 @@
+:root {
+  --fondo: #f7f3ec;
+  --papel: #fffdf8;
+  --tinta: #2d2a26;
+  --suave: #6f675d;
+  --acento: #8a5a3b;
+  --acento-suave: #efe3d6;
+  --linea: #e4dbcd;
+  --error: #a33b2f;
+  --serif: "Lora", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #1c1a17;
+    --papel: #26231f;
+    --tinta: #ece5da;
+    --suave: #a99f92;
+    --acento: #d6a27c;
+    --acento-suave: #3a2f26;
+    --linea: #3a352e;
+    --error: #e58a7e;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font: 16px/1.6 var(--sans);
+}
+
+h1, h2, h3, q, blockquote, .burbuja.assistant { font-family: var(--serif); }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.4rem; }
+h2 { font-size: 1.2rem; margin: 0 0 1rem; }
+h3 { font-size: 1rem; color: var(--acento); margin: 0 0 0.6rem; }
+
+.barra { border-bottom: 1px solid var(--linea); background: var(--papel); }
+.marca {
+  display: block;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.9rem 16px;
+  background: none;
+  border: 0;
+  color: var(--tinta);
+  font: 600 1.05rem var(--serif);
+  cursor: pointer;
+}
+
+main { max-width: 760px; margin: 0 auto; padding: 1.5rem 16px 4rem; }
+
+.intro p, .autor, .intencion, .vacio, small { color: var(--suave); }
+.intro { margin-bottom: 1.5rem; }
+.subtitulo { margin-top: 2rem; }
+.opcional { color: var(--suave); font-weight: 400; }
+
+.tarjeta {
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+label { display: grid; gap: 0.35rem; font-weight: 500; }
+
+input, textarea {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: var(--fondo);
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  resize: vertical;
+}
+input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+
+button { font: inherit; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: default; }
+
+.primario, .respuesta button {
+  justify-self: start;
+  background: var(--acento);
+  color: var(--papel);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+}
+
+.enlace { background: none; border: 0; color: var(--acento); padding: 0.2rem 0; font-size: 0.9rem; }
+.volver { background: none; border: 0; color: var(--suave); padding: 0; margin-bottom: 0.8rem; }
+
+.libros, .diario, .frases, .frases-clave { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+
+.libro {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.15rem;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-left: 4px solid var(--acento);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  color: inherit;
+}
+.libro strong { font-family: var(--serif); font-size: 1.1rem; }
+.libro span { color: var(--suave); }
+
+.encabezado-libro { margin-bottom: 1.2rem; }
+.intencion { font-style: italic; }
+
+.pestanas {
+  display: flex;
+  gap: 0.3rem;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 1.2rem;
+  overflow-x: auto;
+}
+.pestanas button {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0.6rem 0.8rem;
+  color: var(--suave);
+  white-space: nowrap;
+}
+.pestanas button[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--acento); font-weight: 600; }
+
+.pensando { color: var(--suave); font-style: italic; margin-top: 1.5rem; }
+.error { color: var(--error); margin-top: 1rem; }
+
+.reflexion { margin-top: 1.5rem; display: grid; gap: 1rem; }
+.bloque { background: var(--papel); border: 1px solid var(--linea); border-radius: 14px; padding: 1.1rem 1.25rem; }
+.bloque p { margin: 0.2rem 0; }
+
+.frases-clave li { border-left: 3px solid var(--acento-suave); padding-left: 0.8rem; }
+q { font-size: 1.08rem; font-style: italic; }
+.frases-clave p { color: var(--suave); font-size: 0.93rem; }
+
+.preguntas { margin: 0; padding-left: 1.2rem; display: grid; gap: 1rem; }
+.preguntas > li > p { font-family: var(--serif); font-size: 1.05rem; }
+.respuesta { display: grid; gap: 0.5rem; margin-top: 0.4rem; }
+.respuesta button { padding: 0.4rem 0.9rem; font-size: 0.9rem; }
+.guardado { color: var(--suave); font-size: 0.9rem; }
+
+.para-llevar {
+  margin: 0;
+  background: var(--acento-suave);
+  border-radius: 14px;
+  padding: 1.3rem 1.4rem;
+  font-size: 1.25rem;
+  text-align: center;
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.25rem 0 1rem;
+}
+.burbuja { max-width: 85%; padding: 0.7rem 1rem; border-radius: 16px; white-space: pre-wrap; }
+.burbuja.user { align-self: flex-end; background: var(--acento); color: var(--papel); border-bottom-right-radius: 4px; }
+.burbuja.assistant {
+  align-self: flex-start;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-bottom-left-radius: 4px;
+  font-size: 1.03rem;
+}
+.chat-entrada { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: end; }
+.chat-entrada .primario { justify-self: stretch; }
+
+.diario { margin-top: 1.2rem; }
+.diario li, .frases li {
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+.diario li.vacio, .frases li.vacio { background: none; border-style: dashed; }
+.diario p { margin: 0.3rem 0; white-space: pre-wrap; }
+.pregunta { font-family: var(--serif); font-style: italic; color: var(--suave); }
+.frases li { display: grid; gap: 0.3rem; }
+.borrar { justify-self: start; color: var(--suave); }
+
+@media (max-width: 520px) {
+  h1 { font-size: 1.55rem; }
+  .chat-entrada { grid-template-columns: 1fr; }
+  .burbuja { max-width: 95%; }
+}
