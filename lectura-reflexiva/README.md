@@ -43,3 +43,7 @@ Abrí <http://localhost:3000>.
 - `public/`: interfaz en HTML, CSS y JavaScript. `lector.js` convierte PDF (con pdf.js) y EPUB (con JSZip) en páginas de texto, dentro del navegador.
 
 Usa el modelo `claude-opus-5-5` con el mecanismo de *fallback* por defecto de la API: si Claude declina una solicitud, se reintenta automáticamente con el modelo recomendado.
+
+## Versión para claude.ai (sin instalar nada)
+
+`claude-ai.html` es la misma app publicada como página de claude.ai. No necesita servidor ni API key: consulta a Claude con la cuenta de quien la abre y guarda los libros, el diario y las frases en un espacio privado de esa cuenta. Los archivos de los libros quedan en el dispositivo donde se subieron.

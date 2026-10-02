@@ -1,0 +1,1061 @@
+<title>Lectura Reflexiva</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: una sola columna de lectura (~46rem), con pestañas por libro y una barra flotante al seleccionar texto. */
+:root {
+  --bg: #f3f4f1;
+  --papel: #fcfcfa;
+  --tinta: #1f2a28;
+  --suave: #5d6b68;
+  --acento: #2f6f62;
+  --acento-tinta: #ffffff;
+  --acento-suave: #dfece8;
+  --linea: #dbe1de;
+  --error: #a3412f;
+  --display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --texto: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141a19; --papel: #1c2423; --tinta: #e6ece9; --suave: #9aa9a5; --acento: #7cc3b2;
+    --acento-tinta: #0f1716; --acento-suave: #233532; --linea: #2c3836; --error: #ec9483; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141a19; --papel: #1c2423; --tinta: #e6ece9; --suave: #9aa9a5; --acento: #7cc3b2;
+  --acento-tinta: #0f1716; --acento-suave: #233532; --linea: #2c3836; --error: #ec9483; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--tinta); font: 16px/1.6 var(--texto); }
+h1, h2, h3, q, blockquote, .burbuja.assistant, .lector-texto { font-family: var(--display); }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0; text-wrap: balance; font-weight: 600; }
+h2 { font-size: 1.25rem; margin: 0; font-weight: 600; text-wrap: balance; }
+h3 { font-size: 0.78rem; font-family: var(--texto); text-transform: uppercase; letter-spacing: 0.08em; color: var(--acento); margin: 0 0 0.5rem; font-weight: 600; }
+p { margin: 0; }
+
+.barra { border-bottom: 1px solid var(--linea); background: var(--papel); padding-inline: 16px; }
+.barra-interior { max-width: 46rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 0.8rem; }
+.marca { background: none; border: 0; padding: 0; color: var(--tinta); font: 600 1.15rem var(--display); cursor: pointer; }
+.sync { font-size: 0.8rem; color: var(--suave); }
+
+main { max-width: 46rem; margin: 0 auto; padding: 1.75rem 16px 5rem; display: grid; gap: 1.5rem; }
+.vista { display: grid; gap: 1.5rem; min-width: 0; }
+.bajada, .suave, .vacio, small { color: var(--suave); }
+.intro { display: grid; gap: 0.5rem; }
+
+.tarjeta { background: var(--papel); border: 1px solid var(--linea); border-radius: 12px; padding: 1.25rem; display: grid; gap: 0.9rem; min-width: 0; }
+label { display: grid; gap: 0.35rem; font-weight: 500; }
+.opcional { color: var(--suave); font-weight: 400; }
+input, textarea { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--linea); border-radius: 8px; padding: 0.6rem 0.75rem; resize: vertical; }
+input:focus-visible, textarea:focus-visible, button:focus-visible, .archivo input:focus-visible + span { outline: 2px solid var(--acento); outline-offset: 2px; }
+button { font: inherit; cursor: pointer; color: inherit; }
+button:disabled { opacity: 0.55; cursor: default; }
+.primario { justify-self: start; background: var(--acento); color: var(--acento-tinta); border: 0; border-radius: 8px; padding: 0.6rem 1.1rem; font-weight: 600; }
+.secundario { justify-self: start; background: none; border: 1px solid var(--linea); border-radius: 8px; padding: 0.45rem 0.9rem; font-size: 0.92rem; }
+.enlace { justify-self: start; background: none; border: 0; color: var(--acento); padding: 0.15rem 0; font-size: 0.9rem; font-weight: 500; }
+.fila { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+/* Frase del día */
+.frase-dia { border-left: 3px solid var(--acento); padding: 0.25rem 0 0.25rem 1.1rem; display: grid; gap: 0.45rem; }
+.frase-dia blockquote { margin: 0; font-size: 1.55rem; line-height: 1.3; font-style: italic; }
+.frase-dia .origen { color: var(--suave); font-size: 0.9rem; }
+.frase-dia .pregunta { font-family: var(--display); font-size: 1.08rem; }
+
+/* Biblioteca */
+.libros { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.libro { width: 100%; text-align: left; background: var(--papel); border: 1px solid var(--linea); border-radius: 10px; padding: 0.85rem 1rem; display: grid; gap: 0.1rem; }
+.libro strong { font: 600 1.15rem var(--display); }
+.libro .autor { color: var(--suave); }
+.libro small { font-variant-numeric: tabular-nums; }
+.chip { display: inline-block; background: var(--acento-suave); color: var(--acento); border-radius: 999px; padding: 0 0.55rem; font-size: 0.78rem; font-weight: 600; margin-right: 0.35rem; }
+
+/* Libro */
+.volver { justify-self: start; background: none; border: 0; color: var(--suave); padding: 0; }
+.encabezado { display: grid; gap: 0.3rem; }
+.intencion { font-style: italic; color: var(--suave); }
+.pestanas { display: flex; gap: 0.2rem; border-bottom: 1px solid var(--linea); overflow-x: auto; scrollbar-width: none; }
+.pestanas button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 0.6rem 0.75rem; color: var(--suave); white-space: nowrap; font-weight: 500; }
+.pestanas button[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--acento); }
+.pestana { display: grid; gap: 1.25rem; min-width: 0; }
+
+.pensando { color: var(--suave); font-style: italic; }
+.error { color: var(--error); }
+
+.reflexion { display: grid; gap: 1rem; }
+.bloque { background: var(--papel); border: 1px solid var(--linea); border-radius: 12px; padding: 1.1rem 1.25rem; display: grid; gap: 0.6rem; min-width: 0; }
+.lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.frase-clave { display: grid; gap: 0.2rem; padding-left: 0.8rem; border-left: 2px solid var(--acento-suave); }
+q { font-size: 1.12rem; font-style: italic; }
+.frase-clave p { color: var(--suave); font-size: 0.93rem; }
+.preguntas { margin: 0; padding-left: 1.3rem; display: grid; gap: 1.1rem; }
+.preguntas > li > p { font: 1.1rem/1.45 var(--display); }
+.respuesta { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+.llevar { margin: 0; background: var(--acento-suave); border-radius: 12px; padding: 1.3rem; text-align: center; display: grid; gap: 0.5rem; justify-items: center; font-size: 1.3rem; line-height: 1.35; }
+
+/* Lector */
+.archivo { justify-self: start; position: relative; }
+.archivo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.archivo span { display: inline-block; }
+.lector { display: grid; gap: 0.8rem; }
+.paginador { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; color: var(--suave); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.paginador button:not(.enlace) { background: var(--papel); border: 1px solid var(--linea); border-radius: 999px; width: 2.5rem; height: 2.5rem; }
+.lector-texto { background: var(--papel); border: 1px solid var(--linea); border-radius: 12px; padding: 1.5rem 1.4rem; font-size: 1.16rem; line-height: 1.75; white-space: pre-line; overflow-wrap: anywhere; display: grid; gap: 1em; }
+.lector-texto ::selection { background: var(--acento-suave); }
+.barra-seleccion { position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 0.35rem; background: var(--papel); border: 1px solid var(--linea); border-radius: 12px; padding: 0.35rem; box-shadow: 0 8px 28px rgb(0 0 0 / 0.18); max-width: calc(100% - 32px); }
+.barra-seleccion button { white-space: nowrap; }
+.barra-seleccion button:not(.primario) { background: none; border: 0; color: var(--acento); padding: 0 0.8rem; font-weight: 500; }
+.aviso { position: fixed; left: 50%; top: calc(1rem + env(safe-area-inset-top, 0px)); transform: translateX(-50%); background: var(--tinta); color: var(--bg); padding: 0.45rem 1rem; border-radius: 999px; font-size: 0.9rem; }
+
+/* Conversar */
+.chat { display: flex; flex-direction: column; gap: 0.7rem; min-height: 6rem; }
+.burbuja { max-width: 88%; padding: 0.7rem 1rem; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.burbuja.user { align-self: flex-end; background: var(--acento); color: var(--acento-tinta); border-bottom-right-radius: 4px; }
+.burbuja.assistant { align-self: flex-start; background: var(--papel); border: 1px solid var(--linea); border-bottom-left-radius: 4px; font-size: 1.06rem; }
+.chat-entrada { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: end; }
+
+/* Diario y frases */
+.entrada { background: var(--papel); border: 1px solid var(--linea); border-radius: 10px; padding: 0.9rem 1rem; display: grid; gap: 0.3rem; }
+.entrada p { white-space: pre-wrap; }
+.entrada .pregunta { font-family: var(--display); font-style: italic; color: var(--suave); }
+.confirmar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; font-size: 0.92rem; }
+
+@media (max-width: 520px) {
+  h1 { font-size: 1.6rem; }
+  .chat-entrada { grid-template-columns: 1fr; }
+  .chat-entrada .primario { justify-self: stretch; }
+  .lector-texto { padding: 1.2rem 1rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reflexion, .frase-dia { animation: aparecer 0.35s ease-out; }
+  @keyframes aparecer { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<header class="barra">
+  <div class="barra-interior">
+    <button class="marca" id="ir-inicio" type="button">Lectura Reflexiva</button>
+    <span class="sync" id="sync"></span>
+  </div>
+</header>
+
+<main>
+  <section id="vista-biblioteca" class="vista">
+    <div class="intro">
+      <h1>Leer, pensar, volver a vos</h1>
+      <p class="bajada">Guardá los libros que estás leyendo, elegí los pasajes que te tocan y reflexioná con Claude: frases clave, preguntas para mirar hacia adentro y un diario de lectura.</p>
+    </div>
+
+    <section id="frase-dia" class="frase-dia" aria-live="polite"></section>
+
+    <section class="tarjeta" aria-labelledby="t-mis-libros">
+      <h2 id="t-mis-libros">Mi biblioteca</h2>
+      <ul id="lista-libros" class="libros"></ul>
+      <p id="biblioteca-vacia" class="vacio">Todavía no agregaste libros. Empezá con el que tengas en la mesa de luz.</p>
+    </section>
+
+    <form id="form-libro" class="tarjeta">
+      <h2>Empezar un libro</h2>
+      <label for="in-titulo">Título <input id="in-titulo" name="titulo" required placeholder="Ej.: El principito"></label>
+      <label for="in-autor">Autor/a <input id="in-autor" name="autor" placeholder="Ej.: Antoine de Saint-Exupéry"></label>
+      <label for="in-intencion"><span>¿Qué buscás en esta lectura? <span class="opcional">(opcional)</span></span>
+        <textarea id="in-intencion" name="intencion" rows="2" placeholder="Ej.: entender mejor mis vínculos, bajar el ritmo…"></textarea>
+      </label>
+      <button class="primario" type="submit">Agregar a mi biblioteca</button>
+    </form>
+  </section>
+
+  <section id="vista-libro" class="vista" hidden>
+    <div class="encabezado">
+      <button class="volver" id="volver" type="button">← Biblioteca</button>
+      <h1 id="libro-titulo"></h1>
+      <p id="libro-autor" class="suave"></p>
+      <p id="libro-intencion" class="intencion"></p>
+    </div>
+
+    <nav class="pestanas" role="tablist">
+      <button role="tab" data-pestana="leer" aria-selected="true">Leer</button>
+      <button role="tab" data-pestana="reflexionar">Reflexionar</button>
+      <button role="tab" data-pestana="conversar">Conversar</button>
+      <button role="tab" data-pestana="diario">Mi diario</button>
+      <button role="tab" data-pestana="frases">Mis frases</button>
+      <button role="tab" data-pestana="cierre">Cierre</button>
+    </nav>
+
+    <div id="pestana-leer" class="pestana">
+      <div id="subir" class="tarjeta">
+        <h2>Abrí tu libro</h2>
+        <p class="suave">Subí el libro en PDF, EPUB o TXT para leerlo acá. Seleccioná un pasaje para reflexionar con él o guardarlo como frase. El archivo queda solo en este dispositivo y nunca se envía completo a Claude.</p>
+        <label class="archivo" for="input-archivo">
+          <input id="input-archivo" type="file" accept=".pdf,.epub,.txt,.md,application/pdf,application/epub+zip,text/plain">
+          <span class="primario">Elegir archivo</span>
+        </label>
+        <p id="estado-archivo" class="suave" hidden></p>
+      </div>
+      <div id="lector" class="lector" hidden>
+        <div class="paginador">
+          <button id="pag-ant" type="button" aria-label="Página anterior">←</button>
+          <span id="pag-num"></span>
+          <button id="pag-sig" type="button" aria-label="Página siguiente">→</button>
+        </div>
+        <article id="lector-texto" class="lector-texto"></article>
+        <div class="paginador">
+          <button id="pag-ant-2" type="button" aria-label="Página anterior">←</button>
+          <span id="quitar-zona"><button id="quitar-archivo" class="enlace" type="button">Quitar archivo</button></span>
+          <button id="pag-sig-2" type="button" aria-label="Página siguiente">→</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pestana-reflexionar" class="pestana" hidden>
+      <form id="form-fragmento" class="tarjeta">
+        <label for="in-fragmento">Fragmento que leíste
+          <textarea id="in-fragmento" name="fragmento" rows="7" required placeholder="Pegá o escribí el pasaje que te llamó la atención…"></textarea>
+        </label>
+        <label for="in-nota"><span>¿Qué te despertó? <span class="opcional">(opcional)</span></span>
+          <textarea id="in-nota" name="nota" rows="2" placeholder="Una emoción, un recuerdo, una duda…"></textarea>
+        </label>
+        <button class="primario" type="submit">Reflexionar con este fragmento</button>
+      </form>
+      <div id="resultado"></div>
+    </div>
+
+    <div id="pestana-conversar" class="pestana" hidden>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <form id="form-chat" class="chat-entrada">
+        <textarea id="in-mensaje" name="mensaje" rows="2" required placeholder="Contame qué estás pensando del libro…" aria-label="Tu mensaje"></textarea>
+        <button class="primario" type="submit">Enviar</button>
+      </form>
+      <div id="zona-borrar-chat"></div>
+    </div>
+
+    <div id="pestana-diario" class="pestana" hidden>
+      <form id="form-diario" class="tarjeta">
+        <label for="in-diario">Escribir en mi diario
+          <textarea id="in-diario" name="texto" rows="4" required placeholder="Lo que este libro me está mostrando de mí…"></textarea>
+        </label>
+        <button class="primario" type="submit">Guardar</button>
+      </form>
+      <div id="lista-diario" class="lista"></div>
+    </div>
+
+    <div id="pestana-frases" class="pestana" hidden>
+      <div id="lista-frases" class="lista"></div>
+    </div>
+
+    <div id="pestana-cierre" class="pestana" hidden>
+      <div class="tarjeta">
+        <h2>Cerrar la lectura</h2>
+        <p class="suave">Cuando termines el libro, Claude reúne todo lo que fuiste reflexionando, escribiendo y guardando: lo que te dejó, los temas que se repitieron en vos y cómo fue cambiando tu mirada.</p>
+        <button id="generar-cierre" class="primario" type="button">Terminé el libro: generar mi cierre</button>
+      </div>
+      <div id="cierre"></div>
+    </div>
+  </section>
+</main>
+
+<div id="barra-seleccion" class="barra-seleccion" hidden>
+  <button id="sel-reflexionar" class="primario" type="button">Reflexionar con esto</button>
+  <button id="sel-guardar" type="button">☆ Guardar frase</button>
+</div>
+
+<script>
+"use strict";
+
+/* ================= Utilidades ================= */
+
+const $ = (sel, raiz = document) => raiz.querySelector(sel);
+const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fecha = (ms) => new Date(ms).toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" });
+const hoy = () => new Date().toLocaleDateString("sv");
+
+function el(tag, props = {}, ...hijos) {
+  const nodo = Object.assign(document.createElement(tag), props);
+  nodo.append(...hijos.filter((h) => h != null && h !== false));
+  return nodo;
+}
+
+function avisar(texto) {
+  const nodo = el("div", { className: "aviso", textContent: texto, role: "status" });
+  document.body.append(nodo);
+  setTimeout(() => nodo.remove(), 1800);
+}
+
+/* ================= Claude ================= */
+
+const GUIA = `Sos un compañero de lectura cálido, curioso y profundo. Acompañás a una persona mientras lee un libro para que se conecte con el texto y consigo misma.
+- Escribís en español rioplatense (vos), con un tono cercano y sereno. Sin sermones ni frases de autoayuda vacías.
+- Partís siempre de lo que la persona leyó o escribió; citás sus palabras cuando ayuda.
+- Hacés preguntas abiertas que invitan a mirar hacia adentro: emociones, recuerdos, decisiones, valores.
+- Conectás ideas del libro con la vida cotidiana sin imponer interpretaciones: ofrecés posibilidades.
+- Si no conocés bien el libro, trabajás con lo que la persona compartió y no inventás tramas ni citas.`;
+
+let samplePromesa = null;
+function claudeSample() {
+  samplePromesa ??= window.claude?.use ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+  return samplePromesa;
+}
+
+function mensajeError(e) {
+  switch (e?.code) {
+    case "not_granted":
+    case "sampling_disabled":
+    case "not_declared":
+    case "capability_disabled":
+    case "capability_removed":
+      return "Para reflexionar con Claude, permití que esta página use Claude cuando te lo pregunte (podés recargar la página para que vuelva a preguntar).";
+    case "rate_limited": return "Hiciste muchas consultas seguidas o llegaste a tu límite de uso. Probá de nuevo en un rato.";
+    case "session_expired": return "Tu sesión de Claude venció. Volvé a iniciar sesión y probá de nuevo.";
+    case "refused": return "Claude prefirió no responder a esto. Probá con otro pasaje o reformulalo.";
+    case "prompt_too_large": return "El texto es demasiado largo. Probá con un fragmento más corto.";
+    case "invalid_json":
+    case "empty_completion": return "La respuesta llegó incompleta. Tocá el botón otra vez.";
+    case "sin_claude": return "Esta página necesita abrirse en claude.ai para poder consultar a Claude.";
+    default: return "No se pudo conectar con Claude. Probá de nuevo en un momento.";
+  }
+}
+
+async function pedirJSON(prompt, opciones = {}) {
+  const sample = await claudeSample();
+  if (!sample) throw { code: "sin_claude" };
+  return sample.json(prompt, opciones);
+}
+
+function contextoLibro(l) {
+  const partes = [`Libro: "${l.titulo}"`];
+  if (l.autor) partes.push(`Autor/a: ${l.autor}`);
+  if (l.intencion) partes.push(`Lo que la persona busca con esta lectura: ${l.intencion}`);
+  const notas = recuerdos(l);
+  if (notas.length) partes.push(`Reflexiones recientes de la persona sobre este libro:\n${notas.map((n) => `- ${n}`).join("\n")}`);
+  return partes.join("\n");
+}
+
+function recuerdos(l) {
+  return l.diario.slice(0, 6).map((e) => (e.pregunta ? `${e.pregunta} → ${e.texto}` : e.texto));
+}
+
+/* ================= Almacenamiento =================
+   Con la base de datos privada de claude.ai, cada libro es un documento en
+   data/users/<id>/. Sin ella, todo queda en este navegador. */
+
+const CLAVE_LOCAL = "lectura-reflexiva:v1";
+let estado = { libros: [], fraseDelDia: null };
+let nube = null; // { db, uid }
+
+function leerLocal() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_LOCAL));
+    if (datos?.libros) return datos;
+  } catch {}
+  return { libros: [], fraseDelDia: null };
+}
+
+function guardarLocal() {
+  try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(estado)); } catch {}
+}
+
+function normalizar(l) {
+  return { diario: [], frases: [], chat: [], reflexiones: [], pagina: 0, resumen: null, ...l };
+}
+
+// Una escritura a la vez por documento.
+const colas = new Map();
+function escribir(docId, datos) {
+  if (!nube) return;
+  const previa = colas.get(docId) || Promise.resolve();
+  const siguiente = previa
+    .then(() => nube.db.collection(`data/users/${nube.uid}`).doc(docId).set(JSON.parse(JSON.stringify(datos))))
+    .catch((e) => {
+      if (e?.code === "quota_exceeded") avisar("Se llenó el espacio guardado. Borrá notas o conversaciones viejas.");
+      else console.warn("No se pudo guardar en la nube", e);
+    });
+  colas.set(docId, siguiente);
+}
+
+function guardarLibro(l) {
+  l.chat = l.chat.slice(-40);
+  guardarLocal();
+  escribir(`libro-${l.id}`, l);
+}
+
+function borrarLibroGuardado(l) {
+  estado.libros = estado.libros.filter((x) => x.id !== l.id);
+  guardarLocal();
+  if (nube) nube.db.collection(`data/users/${nube.uid}`).doc(`libro-${l.id}`).delete().catch(() => {});
+}
+
+function guardarAjustes() {
+  guardarLocal();
+  escribir("ajustes", { fraseDelDia: estado.fraseDelDia });
+}
+
+async function conectarNube() {
+  if (!window.claude?.use) return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const uid = db && user ? await user.id() : null;
+    if (!db || !uid) return;
+    const snap = await db.collection(`data/users/${uid}`).get();
+    nube = { db, uid };
+    const libros = [];
+    let ajustes = null;
+    for (const d of snap.docs) {
+      if (d.id === "ajustes") ajustes = d.data();
+      else if (d.id.startsWith("libro-")) libros.push(normalizar(structuredClone(d.data())));
+    }
+    if (libros.length || ajustes) {
+      estado = { libros: libros.sort((a, b) => b.creado - a.creado), fraseDelDia: ajustes?.fraseDelDia ?? estado.fraseDelDia };
+      guardarLocal();
+    } else {
+      // Primera vez con la nube: subir lo que ya había en este navegador.
+      estado.libros.forEach((l) => escribir(`libro-${l.id}`, l));
+      if (estado.fraseDelDia) guardarAjustes();
+    }
+    $("#sync").textContent = "Guardado en tu cuenta";
+    refrescar();
+  } catch (e) {
+    console.warn("Sin base de datos", e);
+  }
+}
+
+/* ================= Navegación ================= */
+
+let libroActual = null;
+const libro = () => estado.libros.find((l) => l.id === libroActual);
+
+function refrescar() {
+  if (libroActual && libro()) abrirLibro(libroActual, pestanaActual);
+  else mostrarBiblioteca();
+}
+
+function mostrarBiblioteca() {
+  libroActual = null;
+  $("#vista-libro").hidden = true;
+  $("#vista-biblioteca").hidden = false;
+  $("#lista-libros").replaceChildren(
+    ...estado.libros.map((l) =>
+      el("li", {},
+        el("button", { className: "libro", type: "button", onclick: () => abrirLibro(l.id) },
+          el("strong", { textContent: l.titulo }),
+          l.autor ? el("span", { className: "autor", textContent: l.autor }) : null,
+          el("small", {},
+            l.resumen ? el("span", { className: "chip", textContent: "Terminado" }) : null,
+            `${l.diario.length} ${l.diario.length === 1 ? "nota" : "notas"} · ${l.frases.length} ${l.frases.length === 1 ? "frase" : "frases"} · desde ${fecha(l.creado)}`),
+        ),
+      ),
+    ),
+  );
+  $("#biblioteca-vacia").hidden = estado.libros.length > 0;
+  pintarFraseDelDia();
+}
+
+let pestanaActual = "leer";
+function abrirLibro(idLibro, pestana = "leer") {
+  libroActual = idLibro;
+  const l = libro();
+  $("#vista-biblioteca").hidden = true;
+  $("#vista-libro").hidden = false;
+  $("#libro-titulo").textContent = l.titulo;
+  $("#libro-autor").textContent = l.autor || "";
+  $("#libro-intencion").textContent = l.intencion ? `Busco: ${l.intencion}` : "";
+  $("#libro-autor").hidden = !l.autor;
+  $("#libro-intencion").hidden = !l.intencion;
+  cambiarPestana(pestana);
+  pintarLector();
+  pintarChat();
+  pintarDiario();
+  pintarFrases();
+  pintarCierre();
+}
+
+function cambiarPestana(nombre) {
+  pestanaActual = nombre;
+  document.querySelectorAll("[data-pestana]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.pestana === nombre)));
+  document.querySelectorAll(".pestana").forEach((p) => (p.hidden = p.id !== `pestana-${nombre}`));
+  actualizarSeleccion();
+}
+
+document.querySelectorAll("[data-pestana]").forEach((b) => b.addEventListener("click", () => cambiarPestana(b.dataset.pestana)));
+$("#volver").onclick = mostrarBiblioteca;
+$("#ir-inicio").onclick = mostrarBiblioteca;
+
+/* ================= Biblioteca ================= */
+
+$("#form-libro").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const datos = new FormData(e.target);
+  const nuevo = normalizar({
+    id: id(),
+    titulo: datos.get("titulo").trim(),
+    autor: datos.get("autor").trim(),
+    intencion: datos.get("intencion").trim(),
+    creado: Date.now(),
+  });
+  estado.libros.unshift(nuevo);
+  guardarLibro(nuevo);
+  e.target.reset();
+  abrirLibro(nuevo.id);
+});
+
+/* ================= Frase del día ================= */
+
+let pidiendoFrase = false;
+
+async function pintarFraseDelDia(otra = false) {
+  const caja = $("#frase-dia");
+  const guardada = estado.fraseDelDia;
+
+  if (guardada?.fecha === hoy() && !otra) {
+    const f = guardada.datos;
+    caja.replaceChildren(
+      el("h3", { textContent: "Frase del día" }),
+      el("blockquote", { textContent: f.frase }),
+      el("p", { className: "origen", textContent: f.origen }),
+      el("p", { textContent: f.reflexion }),
+      el("p", { className: "pregunta", textContent: f.pregunta }),
+      el("button", { type: "button", className: "enlace", textContent: "Otra frase", onclick: () => pintarFraseDelDia(true) }),
+    );
+    return;
+  }
+  if (pidiendoFrase) return;
+
+  // Solo se pide sola si ya diste permiso; si no, espera a que la pidas.
+  const permisos = window.claude?.use ? await window.claude.use("permissions").catch(() => null) : null;
+  const permiso = permisos ? await permisos.state("sample").catch(() => "prompt") : "prompt";
+  if (!otra && permiso !== "granted") {
+    caja.replaceChildren(
+      el("h3", { textContent: "Frase del día" }),
+      el("p", { className: "suave", textContent: "Una frase para acompañarte hoy, elegida entre las que guardaste o inspirada en lo que estás leyendo." }),
+      el("button", { type: "button", className: "secundario", textContent: "Ver la frase de hoy", onclick: () => pedirFrase(false) }),
+    );
+    return;
+  }
+  pedirFrase(otra);
+}
+
+async function pedirFrase(otra) {
+  const caja = $("#frase-dia");
+  const anterior = estado.fraseDelDia;
+  pidiendoFrase = true;
+  caja.replaceChildren(el("h3", { textContent: "Frase del día" }), el("p", { className: "pensando", textContent: "Buscando una frase para hoy…" }));
+
+  const libros = estado.libros.slice(0, 8).map((l) => {
+    const frases = l.frases.slice(0, 8).map((f) => `  · "${f.texto}"`).join("\n");
+    const notas = recuerdos(l).slice(0, 3).map((n) => `  · ${n}`).join("\n");
+    return `- "${l.titulo}"${l.autor ? ` de ${l.autor}` : ""}${l.intencion ? ` (busca: ${l.intencion})` : ""}${frases ? `\n  Frases guardadas:\n${frases}` : ""}${notas ? `\n  Notas recientes:\n${notas}` : ""}`;
+  }).join("\n");
+
+  const prompt = `${GUIA}
+
+Hoy es ${new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}. Estos son los libros que estoy leyendo y lo que fui guardando:
+${libros || "(todavía no agregué libros)"}
+${otra && anterior ? `\nNo repitas esta frase: "${anterior.datos.frase}"` : ""}
+
+Elegí o inspirate en una frase para acompañarme hoy. Si hay frases guardadas, preferí una de ellas (textual) y conectala con lo que vengo escribiendo. Si no hay libros, proponé una frase de un clásico que conozcas bien, con su autor.
+
+Respondé solo con un objeto JSON con esta forma:
+{"frase": "la frase, breve", "origen": "el libro y autor, o 'Inspirada en <libro>'", "reflexion": "dos o tres oraciones que abren la frase hacia el día de hoy", "pregunta": "una pregunta para llevar durante el día"}`;
+
+  try {
+    const f = await pedirJSON(prompt, { cache: false });
+    if (!f?.frase) throw { code: "invalid_json" };
+    estado.fraseDelDia = { fecha: hoy(), datos: { frase: String(f.frase), origen: String(f.origen || ""), reflexion: String(f.reflexion || ""), pregunta: String(f.pregunta || "") } };
+    guardarAjustes();
+    pidiendoFrase = false;
+    if (!libroActual) pintarFraseDelDia();
+  } catch (e) {
+    pidiendoFrase = false;
+    caja.replaceChildren(
+      el("h3", { textContent: "Frase del día" }),
+      el("p", { className: "suave", textContent: mensajeError(e) }),
+      el("button", { type: "button", className: "secundario", textContent: "Intentar de nuevo", onclick: () => pedirFrase(otra) }),
+    );
+  }
+}
+
+/* ================= Reflexionar ================= */
+
+$("#form-fragmento").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const fragmento = form.elements.fragmento.value.trim();
+  const nota = form.elements.nota.value.trim();
+  const boton = $("button", form);
+  const resultado = $("#resultado");
+  const l = libro();
+
+  boton.disabled = true;
+  resultado.replaceChildren(el("p", { className: "pensando", textContent: "Leyendo con calma tu fragmento…" }));
+
+  const prompt = `${GUIA}
+
+${contextoLibro(l)}
+
+Fragmento que acabo de leer:
+"""
+${fragmento.slice(0, 12000)}
+"""
+${nota ? `\nLo que me despertó: ${nota}\n` : ""}
+Ayudame a reflexionar sobre este fragmento. Las frases clave deben ser textuales del fragmento cuando sea posible.
+
+Respondé solo con un objeto JSON con esta forma:
+{"frases_clave": [{"frase": "frase del fragmento", "por_que": "una línea sobre por qué importa"}],
+ "idea_central": "la idea en una o dos oraciones",
+ "preguntas": ["tres preguntas reflexivas, de lo más cercano al texto a lo más personal"],
+ "conexion_personal": "un párrafo breve que conecta el fragmento con mi nota o mi vida",
+ "frase_para_llevar": "una frase corta para recordar durante el día"}
+Incluí de 2 a 4 frases clave y exactamente 3 preguntas.`;
+
+  try {
+    const r = await pedirJSON(prompt);
+    if (!Array.isArray(r?.frases_clave) || !Array.isArray(r?.preguntas)) throw { code: "invalid_json" };
+    l.reflexiones.push({ fragmento: fragmento.slice(0, 400), idea: String(r.idea_central || ""), creado: Date.now() });
+    l.reflexiones = l.reflexiones.slice(-60);
+    guardarLibro(l);
+    if (libroActual === l.id) resultado.replaceChildren(vistaReflexion(r, fragmento));
+  } catch (err) {
+    resultado.replaceChildren(el("p", { className: "error", textContent: mensajeError(err) }));
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+function vistaReflexion(r, fragmento) {
+  return el("article", { className: "reflexion" },
+    el("section", { className: "bloque" },
+      el("h3", { textContent: "Frases clave" }),
+      el("ul", { className: "lista" }, ...r.frases_clave.map((f) =>
+        el("li", { className: "frase-clave" },
+          el("q", { textContent: String(f.frase ?? f) }),
+          f.por_que ? el("p", { textContent: String(f.por_que) }) : null,
+          botonGuardarFrase(String(f.frase ?? f))))),
+    ),
+    el("section", { className: "bloque" }, el("h3", { textContent: "La idea central" }), el("p", { textContent: String(r.idea_central || "") })),
+    el("section", { className: "bloque" },
+      el("h3", { textContent: "Preguntas para vos" }),
+      el("ol", { className: "preguntas" }, ...r.preguntas.map((p) => el("li", {}, el("p", { textContent: String(p) }), formRespuesta(String(p), fragmento)))),
+    ),
+    el("section", { className: "bloque" }, el("h3", { textContent: "Conexión con tu vida" }), el("p", { textContent: String(r.conexion_personal || "") })),
+    r.frase_para_llevar ? el("blockquote", { className: "llevar" }, el("span", { textContent: String(r.frase_para_llevar) }), botonGuardarFrase(String(r.frase_para_llevar))) : null,
+  );
+}
+
+function guardarFrase(texto) {
+  const l = libro();
+  if (l.frases.some((f) => f.texto === texto)) return;
+  l.frases.unshift({ id: id(), texto, creado: Date.now() });
+  guardarLibro(l);
+  pintarFrases();
+}
+
+function botonGuardarFrase(frase) {
+  const boton = el("button", { type: "button", className: "enlace" });
+  const actualizar = () => {
+    const ya = libro().frases.some((f) => f.texto === frase);
+    boton.textContent = ya ? "✓ Guardada en mis frases" : "☆ Guardar frase";
+    boton.disabled = ya;
+  };
+  boton.onclick = () => { guardarFrase(frase); actualizar(); };
+  actualizar();
+  return boton;
+}
+
+let respuestaN = 0;
+function formRespuesta(pregunta, fragmento) {
+  const area = el("textarea", { id: `respuesta-${++respuestaN}`, rows: 2, required: true, placeholder: "Tu respuesta, sin apuro…", ariaLabel: "Tu respuesta" });
+  const form = el("form", { className: "respuesta" }, area, el("button", { type: "submit", className: "secundario", textContent: "Guardar en mi diario" }));
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const texto = area.value.trim();
+    if (!texto) return;
+    const l = libro();
+    l.diario.unshift({ id: id(), pregunta, fragmento: fragmento.slice(0, 400), texto, creado: Date.now() });
+    guardarLibro(l);
+    pintarDiario();
+    form.replaceChildren(el("p", { className: "suave", textContent: `Guardado en tu diario: “${texto}”` }));
+  };
+  return form;
+}
+
+/* ================= Conversar ================= */
+
+let charlaCtl = null;
+
+function pintarChat() {
+  const l = libro();
+  const chat = $("#chat");
+  chat.replaceChildren(...(l.chat.length
+    ? l.chat.map((m) => el("div", { className: `burbuja ${m.role}`, textContent: m.content }))
+    : [el("p", { className: "vacio", textContent: "Podés contar qué te está pasando con el libro, una escena que no te suelta o una pregunta que te dejó." })]));
+  $("#zona-borrar-chat").replaceChildren(l.chat.length ? el("button", { type: "button", className: "enlace", textContent: "Empezar una conversación nueva", onclick: confirmarBorrarChat }) : "");
+}
+
+function confirmarBorrarChat() {
+  $("#zona-borrar-chat").replaceChildren(el("div", { className: "confirmar" },
+    el("span", { textContent: "¿Borrar esta conversación?" }),
+    el("button", { type: "button", className: "secundario", textContent: "Sí, borrar", onclick: () => { const l = libro(); l.chat = []; guardarLibro(l); pintarChat(); } }),
+    el("button", { type: "button", className: "enlace", textContent: "Cancelar", onclick: pintarChat }),
+  ));
+}
+
+$("#form-chat").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const area = form.elements.mensaje;
+  const texto = area.value.trim();
+  if (!texto) return;
+  const l = libro();
+  l.chat.push({ role: "user", content: texto });
+  guardarLibro(l);
+  area.value = "";
+  pintarChat();
+
+  const burbuja = el("div", { className: "burbuja assistant", textContent: "Pensando…" });
+  $("#chat").append(burbuja);
+  burbuja.scrollIntoView({ block: "nearest" });
+  const boton = $("button", form);
+  boton.disabled = true;
+
+  const instrucciones = `${GUIA}\nRespondé breve: a lo sumo una o dos preguntas por turno.\n\n${contextoLibro(l)}\n\n(Empieza la conversación.)`;
+  const turnos = [{ role: "user", content: instrucciones }, ...l.chat.slice(-20)];
+  charlaCtl = new AbortController();
+  try {
+    const sample = await claudeSample();
+    if (!sample) throw { code: "sin_claude" };
+    const { text } = await sample(turnos, { cache: false, signal: charlaCtl.signal, onText: ({ text }) => { burbuja.textContent = text; } });
+    l.chat.push({ role: "assistant", content: text });
+    guardarLibro(l);
+  } catch (err) {
+    if (err?.text) {
+      l.chat.push({ role: "assistant", content: err.text });
+      guardarLibro(l);
+    } else {
+      burbuja.replaceWith(el("p", { className: "error", textContent: mensajeError(err) }));
+    }
+  } finally {
+    boton.disabled = false;
+    if (libroActual === l.id) $("#zona-borrar-chat").replaceChildren(el("button", { type: "button", className: "enlace", textContent: "Empezar una conversación nueva", onclick: confirmarBorrarChat }));
+  }
+});
+
+/* ================= Diario y frases ================= */
+
+$("#form-diario").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const texto = e.target.elements.texto.value.trim();
+  if (!texto) return;
+  const l = libro();
+  l.diario.unshift({ id: id(), texto, creado: Date.now() });
+  guardarLibro(l);
+  e.target.reset();
+  pintarDiario();
+});
+
+function botonBorrar(lista, idItem, pintar) {
+  return el("button", { type: "button", className: "enlace", textContent: "Borrar", onclick: () => {
+    const l = libro();
+    l[lista] = l[lista].filter((x) => x.id !== idItem);
+    guardarLibro(l);
+    pintar();
+  } });
+}
+
+function pintarDiario() {
+  const entradas = libro().diario;
+  $("#lista-diario").replaceChildren(...(entradas.length
+    ? entradas.map((e) => el("div", { className: "entrada" },
+        el("small", { textContent: fecha(e.creado) }),
+        e.pregunta ? el("p", { className: "pregunta", textContent: e.pregunta }) : null,
+        el("p", { textContent: e.texto }),
+        botonBorrar("diario", e.id, pintarDiario)))
+    : [el("p", { className: "vacio", textContent: "Tu diario está esperando. Respondé una pregunta en Reflexionar o escribí libremente." })]));
+}
+
+function pintarFrases() {
+  const frases = libro().frases;
+  $("#lista-frases").replaceChildren(...(frases.length
+    ? frases.map((f) => el("div", { className: "entrada" }, el("q", { textContent: f.texto }), botonBorrar("frases", f.id, pintarFrases)))
+    : [el("p", { className: "vacio", textContent: "Guardá frases seleccionándolas mientras leés, o desde las reflexiones." })]));
+}
+
+/* ================= Cierre ================= */
+
+function pintarCierre() {
+  const l = libro();
+  $("#generar-cierre").textContent = l.resumen ? "Volver a generar mi cierre" : "Terminé el libro: generar mi cierre";
+  $("#cierre").replaceChildren(l.resumen ? vistaCierre(l.resumen) : "");
+}
+
+function vistaCierre(r) {
+  const lista = (x) => (Array.isArray(x) ? x : []);
+  return el("article", { className: "reflexion" },
+    el("section", { className: "bloque" }, el("h3", { textContent: "Lo que este libro te dejó" }), el("p", { textContent: String(r.lo_que_te_dejo || "") })),
+    el("section", { className: "bloque" },
+      el("h3", { textContent: "Temas que se repitieron en vos" }),
+      el("ul", { className: "lista" }, ...lista(r.temas).map((t) => el("li", {}, el("strong", { textContent: String(t.tema ?? t) }), t.como_aparecio ? el("p", { textContent: String(t.como_aparecio) }) : null))),
+    ),
+    el("section", { className: "bloque" }, el("h3", { textContent: "Tu recorrido" }), el("p", { textContent: String(r.tu_recorrido || "") })),
+    lista(r.frases_que_te_acompanan).length ? el("section", { className: "bloque" },
+      el("h3", { textContent: "Frases que te acompañan" }),
+      el("ul", { className: "lista" }, ...lista(r.frases_que_te_acompanan).map((f) => el("li", { className: "frase-clave" }, el("q", { textContent: String(f) }))))) : null,
+    r.pregunta_para_seguir ? el("blockquote", { className: "llevar" }, el("span", { textContent: String(r.pregunta_para_seguir) })) : null,
+    r.proxima_lectura ? el("section", { className: "bloque" }, el("h3", { textContent: "Para tu próxima lectura" }), el("p", { textContent: String(r.proxima_lectura) })) : null,
+  );
+}
+
+$("#generar-cierre").addEventListener("click", async (e) => {
+  const boton = e.currentTarget;
+  const l = libro();
+  if (!l.diario.length && !l.frases.length && !l.reflexiones.length) {
+    $("#cierre").replaceChildren(el("p", { className: "suave", textContent: "Todavía no hay reflexiones, notas ni frases de este libro. Cuando tengas algunas, acá vas a poder cerrar la lectura." }));
+    return;
+  }
+  boton.disabled = true;
+  $("#cierre").replaceChildren(el("p", { className: "pensando", textContent: "Releyendo todo lo que fuiste escribiendo…" }));
+  const orden = (a, b) => a.creado - b.creado;
+  const item = (xs) => (xs.length ? xs.map((x) => `- ${x}`).join("\n") : "(nada)");
+  const prompt = `${GUIA}
+
+Libro: "${l.titulo}"${l.autor ? ` de ${l.autor}` : ""}${l.intencion ? `\nLo que buscaba con esta lectura: ${l.intencion}` : ""}
+
+Terminé de leer este libro. Esto es lo que fui guardando, en orden cronológico.
+
+Fragmentos sobre los que reflexioné (con su idea central):
+${item([...l.reflexiones].sort(orden).map((r) => `"${r.fragmento}" → ${r.idea}`))}
+
+Mi diario:
+${item([...l.diario].sort(orden).map((d) => (d.pregunta ? `${d.pregunta} → ${d.texto}` : d.texto)))}
+
+Frases que guardé:
+${item([...l.frases].sort(orden).map((f) => `"${f.texto}"`))}
+
+Ayudame a cerrar la lectura. Basate en lo que escribí; no inventes cosas que no dije.
+
+Respondé solo con un objeto JSON con esta forma:
+{"lo_que_te_dejo": "un párrafo", "temas": [{"tema": "nombre corto", "como_aparecio": "cómo apareció en mis reflexiones"}],
+ "tu_recorrido": "cómo fue cambiando mi mirada", "frases_que_te_acompanan": ["hasta 3 frases de las mías"],
+ "pregunta_para_seguir": "una pregunta abierta", "proxima_lectura": "una sugerencia de libro y por qué, en una o dos oraciones"}
+Incluí de 2 a 4 temas.`;
+  try {
+    const r = await pedirJSON(prompt.slice(0, 200000), { modelTier: "complex", cache: false });
+    if (!r?.lo_que_te_dejo) throw { code: "invalid_json" };
+    l.resumen = r;
+    guardarLibro(l);
+    if (libroActual === l.id) pintarCierre();
+  } catch (err) {
+    $("#cierre").replaceChildren(el("p", { className: "error", textContent: mensajeError(err) }));
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+/* ================= Leer: PDF, EPUB y TXT =================
+   El texto del libro se guarda en IndexedDB de este dispositivo. */
+
+const CDN = "https://cdnjs.cloudflare.com/ajax/libs";
+const LARGO_PAGINA = 2500;
+let paginas = null;
+
+function cargarScript(src) {
+  return new Promise((resolver, rechazar) => {
+    document.head.append(Object.assign(document.createElement("script"), { src, onload: resolver, onerror: () => rechazar(new Error("No se pudo cargar el lector. Revisá tu conexión.")) }));
+  });
+}
+
+async function leerArchivo(archivo) {
+  const nombre = archivo.name.toLowerCase();
+  if (nombre.endsWith(".pdf")) return leerPDF(archivo);
+  if (nombre.endsWith(".epub")) return paginar(await leerEPUB(archivo));
+  if (nombre.endsWith(".txt") || nombre.endsWith(".md")) return paginar([await archivo.text()]);
+  throw new Error("Por ahora se pueden abrir archivos PDF, EPUB o TXT.");
+}
+
+async function leerPDF(archivo) {
+  if (!window.pdfjsLib) {
+    // El worker se carga como script normal: pdf.js lo usa en el hilo principal.
+    await cargarScript(`${CDN}/pdf.js/3.11.174/pdf.worker.min.js`);
+    await cargarScript(`${CDN}/pdf.js/3.11.174/pdf.min.js`);
+  }
+  const doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(await archivo.arrayBuffer()), isEvalSupported: false }).promise;
+  const resultado = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    const contenido = await (await doc.getPage(n)).getTextContent();
+    const texto = contenido.items.map((i) => (i.str || "") + (i.hasEOL ? "\n" : "")).join("").replace(/[ \t]+\n/g, "\n").trim();
+    if (texto) resultado.push(texto);
+    if (n % 20 === 0) $("#estado-archivo").textContent = `Abriendo el libro… página ${n} de ${doc.numPages}`;
+  }
+  if (!resultado.length) throw new Error("Este PDF no tiene texto seleccionable (puede ser un escaneo). Probá con otra edición.");
+  return resultado;
+}
+
+async function leerEPUB(archivo) {
+  if (!window.JSZip) await cargarScript(`${CDN}/jszip/3.10.1/jszip.min.js`);
+  const zip = await window.JSZip.loadAsync(archivo);
+  const xml = (t) => new DOMParser().parseFromString(t, "application/xml");
+  const contenedor = await zip.file("META-INF/container.xml")?.async("string");
+  if (!contenedor) throw new Error("El EPUB no es válido.");
+  const rutaOpf = xml(contenedor).querySelector("rootfile")?.getAttribute("full-path");
+  const archivoOpf = rutaOpf && zip.file(rutaOpf);
+  if (!archivoOpf) throw new Error("El EPUB no es válido.");
+  const opf = xml(await archivoOpf.async("string"));
+  const base = rutaOpf.includes("/") ? rutaOpf.slice(0, rutaOpf.lastIndexOf("/") + 1) : "";
+  const manifiesto = new Map();
+  opf.querySelectorAll("manifest > item").forEach((i) => manifiesto.set(i.getAttribute("id"), i.getAttribute("href")));
+  const capitulos = [];
+  for (const ref of opf.querySelectorAll("spine > itemref")) {
+    const href = manifiesto.get(ref.getAttribute("idref"));
+    const entrada = href && zip.file(base + decodeURIComponent(href.split("#")[0]));
+    if (!entrada) continue;
+    const html = new DOMParser().parseFromString(await entrada.async("string"), "text/html");
+    const bloques = [...html.body.querySelectorAll("h1, h2, h3, h4, p, li, blockquote")].map((b) => b.textContent.replace(/\s+/g, " ").trim()).filter(Boolean);
+    const texto = bloques.length ? bloques.join("\n\n") : html.body.textContent.trim();
+    if (texto) capitulos.push(texto);
+  }
+  if (!capitulos.length) throw new Error("No se encontró texto en este EPUB.");
+  return capitulos;
+}
+
+function paginar(capitulos) {
+  const salida = [];
+  for (const cap of capitulos) {
+    let actual = "";
+    for (const parrafo of cap.split(/\n\s*\n/)) {
+      if (actual && actual.length + parrafo.length > LARGO_PAGINA) { salida.push(actual.trim()); actual = ""; }
+      actual += parrafo.trim() + "\n\n";
+    }
+    if (actual.trim()) salida.push(actual.trim());
+  }
+  return salida;
+}
+
+const memoria = new Map();
+let dbLocal;
+function abrirDBLocal() {
+  dbLocal ??= new Promise((resolver, rechazar) => {
+    const p = indexedDB.open("lectura-reflexiva", 1);
+    p.onupgradeneeded = () => p.result.createObjectStore("textos");
+    p.onsuccess = () => resolver(p.result);
+    p.onerror = () => rechazar(p.error);
+  });
+  return dbLocal;
+}
+async function idb(modo, accion) {
+  const base = await abrirDBLocal();
+  return new Promise((resolver, rechazar) => {
+    const p = accion(base.transaction("textos", modo).objectStore("textos"));
+    p.onsuccess = () => resolver(p.result);
+    p.onerror = () => rechazar(p.error);
+  });
+}
+async function guardarTexto(k, v) { memoria.set(k, v); try { await idb("readwrite", (s) => s.put(v, k)); } catch {} }
+async function obtenerTexto(k) {
+  if (memoria.has(k)) return memoria.get(k);
+  try { const v = await idb("readonly", (s) => s.get(k)); if (v) memoria.set(k, v); return v; } catch { return undefined; }
+}
+async function borrarTexto(k) { memoria.delete(k); try { await idb("readwrite", (s) => s.delete(k)); } catch {} }
+
+async function pintarLector() {
+  const idLibro = libroActual;
+  const datos = await obtenerTexto(idLibro);
+  if (idLibro !== libroActual) return;
+  paginas = datos?.paginas ?? null;
+  $("#subir").hidden = !!paginas;
+  $("#lector").hidden = !paginas;
+  $("#estado-archivo").hidden = true;
+  $("#quitar-zona").replaceChildren(el("button", { id: "quitar-archivo", className: "enlace", type: "button", textContent: "Quitar archivo", onclick: confirmarQuitar }));
+  if (paginas) mostrarPagina(libro().pagina);
+}
+
+function mostrarPagina(n) {
+  const l = libro();
+  const nueva = Math.max(0, Math.min(n, paginas.length - 1));
+  if (nueva !== l.pagina) { l.pagina = nueva; guardarLibro(l); }
+  $("#lector-texto").replaceChildren(...paginas[nueva].split(/\n\s*\n/).map((p) => el("p", { textContent: p.trim() })));
+  $("#pag-num").textContent = `Página ${nueva + 1} de ${paginas.length}`;
+  for (const s of ["", "-2"]) {
+    $(`#pag-ant${s}`).disabled = nueva === 0;
+    $(`#pag-sig${s}`).disabled = nueva === paginas.length - 1;
+  }
+}
+
+function pasarPagina(delta) {
+  if (!paginas) return;
+  mostrarPagina(libro().pagina + delta);
+  $("#lector").scrollIntoView({ block: "start" });
+}
+$("#pag-ant").onclick = $("#pag-ant-2").onclick = () => pasarPagina(-1);
+$("#pag-sig").onclick = $("#pag-sig-2").onclick = () => pasarPagina(1);
+document.addEventListener("keydown", (e) => {
+  if ($("#vista-libro").hidden || $("#pestana-leer").hidden || !paginas || e.target.closest("input, textarea")) return;
+  if (e.key === "ArrowRight") pasarPagina(1);
+  if (e.key === "ArrowLeft") pasarPagina(-1);
+});
+
+function confirmarQuitar() {
+  $("#quitar-zona").replaceChildren(el("span", { className: "confirmar" },
+    el("button", { type: "button", className: "secundario", textContent: "Sí, quitar archivo", onclick: async () => { await borrarTexto(libroActual); pintarLector(); } }),
+    el("button", { type: "button", className: "enlace", textContent: "Cancelar", onclick: pintarLector }),
+  ));
+}
+
+$("#input-archivo").addEventListener("change", async (e) => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  const idLibro = libroActual;
+  const aviso = $("#estado-archivo");
+  aviso.hidden = false;
+  aviso.className = "suave";
+  aviso.textContent = "Abriendo el libro…";
+  try {
+    const nuevas = await leerArchivo(archivo);
+    await guardarTexto(idLibro, { nombre: archivo.name, paginas: nuevas });
+    const l = estado.libros.find((x) => x.id === idLibro);
+    l.pagina = 0;
+    guardarLibro(l);
+    if (idLibro === libroActual) pintarLector();
+  } catch (err) {
+    aviso.className = "error";
+    aviso.textContent = err?.message || "No se pudo abrir el archivo.";
+  } finally {
+    e.target.value = "";
+  }
+});
+
+function textoSeleccionado() {
+  const sel = document.getSelection();
+  if (!sel || sel.isCollapsed || !$("#lector-texto").contains(sel.anchorNode)) return "";
+  return sel.toString().replace(/\s+/g, " ").trim();
+}
+function actualizarSeleccion() {
+  $("#barra-seleccion").hidden = !textoSeleccionado() || $("#pestana-leer").hidden || $("#vista-libro").hidden;
+}
+document.addEventListener("selectionchange", actualizarSeleccion);
+
+$("#sel-reflexionar").onclick = () => {
+  const texto = textoSeleccionado();
+  if (!texto) return;
+  const form = $("#form-fragmento");
+  form.elements.fragmento.value = texto;
+  form.elements.nota.value = "";
+  $("#resultado").replaceChildren();
+  document.getSelection().removeAllRanges();
+  cambiarPestana("reflexionar");
+  form.elements.nota.focus();
+};
+$("#sel-guardar").onclick = () => {
+  const texto = textoSeleccionado();
+  if (!texto) return;
+  guardarFrase(texto);
+  document.getSelection().removeAllRanges();
+  actualizarSeleccion();
+  avisar("Frase guardada ✓");
+};
+
+/* ================= Arranque ================= */
+
+estado = leerLocal();
+estado.libros = estado.libros.map(normalizar);
+$("#sync").textContent = "Guardado en este navegador";
+mostrarBiblioteca();
+conectarNube();
+</script>
